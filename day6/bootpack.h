@@ -10,16 +10,17 @@ struct BOOTINFO { /* 0x0ff0-0x0fff */
 #define ADR_BOOTINFO	0x00000ff0 /* bootinfo的起始存放位置 */
 
 /* naskfunc.nas */
-void io_hlt(void);
-void io_cli(void);
-void io_out8(int port, int data);
-int io_load_eflags(void);
-void io_store_eflags(int eflags);
-void load_gdtr(int limit, int addr);
-void load_idtr(int limit, int addr);
-void asm_inthandler21(void);
+void io_hlt(void); // cpu 休眠
+void io_cli(void); // 将中断标志置为0(clear interrupt flag)
+void io_stl(void); // 将中断标志置为1(set interrupt flag)
+void io_out8(int port, int data); // 向 cpu 之外的设备传数据
+int io_load_eflags(void); // 或取记录中断许可标志eflags
+void io_store_eflags(int eflags); // 给记录中断许可标志eflags赋值
+void load_gdtr(int limit, int addr); // 给GDTR赋值
+void load_idtr(int limit, int addr); // 给IDTR赋值
+void asm_inthandler21(void); // 键盘中断需要调用的函数
 void asm_inthandler27(void);
-void asm_inthandler2c(void);
+void asm_inthandler2c(void); // 鼠标中断需要调用的函数
 
 /* graphic.c */
 void init_palette(void);
@@ -31,6 +32,7 @@ void putfonts8_asc(char *vram, int xsize, int x, int y, char c, unsigned char *s
 void init_mouse_cursor8(char *mouse, char bc);
 void putblock8_8(char *vram, int vxsize, int pxsize,
 	int pysize, int px0, int py0, char *buf, int bxsize);
+/*定义颜色映射*/
 #define COL8_000000		0
 #define COL8_FF0000		1
 #define COL8_00FF00		2
@@ -49,28 +51,45 @@ void putblock8_8(char *vram, int vxsize, int pxsize,
 #define COL8_848484		15
 
 /* dsctbl.c */
+/*
+段基址：base_low base_mid base_high
+段上限：limit_low limit_high(低四位)
+段属性：access_right limit_high(高四位)
+
+access_right:
+    00000000(0x00):未使用的记录表(descriptor table)。 
+    10010010(0x92):系统专用，可读写的段。不可执行。 
+    10011010(0x9a):系统专用，可执行的段。可读不可写。 
+    11110010(0xf2):应用程序用，可读写的段。不可执行。 
+    11111010(0xfa):应用程序用，可执行的段。可读不可写。
+*/
 struct SEGMENT_DESCRIPTOR {
 	short limit_low, base_low;
 	char base_mid, access_right;
 	char limit_high, base_high;
 };
+/*
+触发中断执行的函数地址：offset_low offset_high
+触发中断执行的函数段编号：selector
+触发中断执行的函数段属性：access_right dw_count
+*/
 struct GATE_DESCRIPTOR {
 	short offset_low, selector;
 	char dw_count, access_right;
 	short offset_high;
 };
-void init_gdtidt(void);
+void init_gdtidt(void); // 初始化GDT（Global Descriptor Table）和IDT（Interrupt Descriptor Table）
 void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd, unsigned int limit, int base, int ar);
 void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
-#define ADR_IDT			0x0026f800
-#define LIMIT_IDT		0x000007ff
-#define ADR_GDT			0x00270000
+#define ADR_IDT			0x0026f800 // 将0x26f800~0x26ffff设为IDT
+#define LIMIT_IDT		0x000007ff 
+#define ADR_GDT			0x00270000 // 将0x270000~0x27ffff设为GDT
 #define LIMIT_GDT		0x0000ffff
-#define ADR_BOTPAK		0x00280000
+#define ADR_BOTPAK		0x00280000 // bootpack 程序的起始地址
 #define LIMIT_BOTPAK	0x0007ffff
-#define AR_DATA32_RW	0x4092
-#define AR_CODE32_ER	0x409a
-#define AR_INTGATE32	0x008e
+#define AR_DATA32_RW	0x4092 // 系统专用，可读写的段。不可执行。
+#define AR_CODE32_ER	0x409a // 系统专用，可执行的段。可读不可写。 
+#define AR_INTGATE32	0x008e // 表示这是用于中断处理的有效设定
 
 /* int.c */
 void init_pic(void);
