@@ -24,6 +24,7 @@ int fifo8_put(struct FIFO8 *fifo, unsigned char data)
         return -1;
     }
     fifo->buf[fifo->p] = data;
+    fifo->p++;
     fifo->p %= fifo->size;
     fifo->free--;
     return 0;
@@ -39,6 +40,7 @@ int fifo8_get(struct FIFO8 *fifo)
     }
 
     data = fifo->buf[fifo->q];
+    fifo->q++;
     fifo->q %= fifo->size;
     fifo->free++;
 
