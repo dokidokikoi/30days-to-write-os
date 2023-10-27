@@ -2,3 +2,11 @@
 harib*/
 *.swp
 .vscode/
+*.obj
+*.lst
+*.bin
+*.sys
+*.img
+*.map
+*.hrb
+*.bim
