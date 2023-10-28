@@ -22,11 +22,13 @@ void load_gdtr(int limit, int addr); // 给GDTR赋值
 void load_idtr(int limit, int addr); // 给IDTR赋值
 int load_cr0(void);
 void store_cr0(int cr0);
+void load_tr(int tr);
 void asm_inthandler20(void);
 void asm_inthandler21(void); // 键盘中断需要调用的函数
 void asm_inthandler27(void);
 void asm_inthandler2c(void); // 鼠标中断需要调用的函数
 unsigned int memtest_sub(unsigned int start, unsigned int end);
+void farjmp(int eip, int cs);
 
 /* graphic.c */
 void init_palette(void);
@@ -96,6 +98,7 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 #define AR_DATA32_RW	0x4092 // 系统专用，可读写的段。不可执行。
 #define AR_CODE32_ER	0x409a // 系统专用，可执行的段。可读不可写。 
 #define AR_INTGATE32	0x008e // 表示这是用于中断处理的有效设定
+#define AR_TSS32		0x0089
 
 /* int.c */
 void init_pic(void);
@@ -225,3 +228,8 @@ struct TIMER *timer_alloc(void);
 void timer_free(struct TIMER *timer);
 void timer_init(struct TIMER *timer, struct FIFO32 *fifo, unsigned char data);
 void timer_settime(struct TIMER *timer, unsigned int timeout);
+
+/* mtask.c */
+extern struct TIMER *mt_timer;
+void mt_init(void);
+void mt_taskswitch(void);
