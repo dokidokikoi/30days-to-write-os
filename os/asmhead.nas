@@ -1,6 +1,8 @@
 ; haribote-os
 ; TAB=4
 
+[INSTRSET "i486p"]
+
 VBEMODE	EQU		0x105			; 1024 x  768 x 8bit彩色
 ; （画面模式一览）
 ;	0x100 :  640 x  400 x 8bit彩色
@@ -56,16 +58,6 @@ VRAM	EQU		0x0ff8			; 图像缓冲区的开始地址
 		MOV		AX,[ES:DI+0x00]
 		AND		AX,0x0080
 		JZ		scrn320			; 模式属性的bit7是0，所以放弃
-
-; 设定画面模式
-
-		MOV		BX,0x4101		; VBE的640x480x8bit彩色
-		MOV		AX,0x4f02
-		INT		0x10
-		MOV		BYTE [VMODE],8	; 记录画面模式
-		MOV		WORD [SCRNX],640
-		MOV		WORD [SCRNY],480
-		MOV		DWORD [VRAM],0xe0000000
 
 ; 画面模式的切换
 

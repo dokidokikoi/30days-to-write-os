@@ -74,8 +74,8 @@ img :
 
 run :
 	$(MAKE) img
-	$(COPY) haribote.img $(TOOLPATH)bochs/fdimage0.bin
-	$(MAKE) -C $(TOOLPATH)bochs
+	$(COPY) haribote.img $(TOOLPATH)qemu/fdimage0.bin
+	$(MAKE) -C $(TOOLPATH)qemu
 
 install :
 	$(MAKE) img
