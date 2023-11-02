@@ -1,4 +1,6 @@
 #include "bootpack.h"
+#include<stdio.h>
+#include <string.h>
 
 struct FIFO32 *keyfifo;
 int keydata0;

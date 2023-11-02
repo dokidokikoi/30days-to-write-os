@@ -1,4 +1,6 @@
 #include "bootpack.h"
+#include<stdio.h>
+#include <string.h>
 
 void console_task(struct SHEET *sheet, unsigned int memtotal)
 {
