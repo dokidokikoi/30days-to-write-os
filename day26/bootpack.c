@@ -209,6 +209,7 @@ void HariMain(void)
 						task->tss.eax = (int) &(task->tss.esp0);
 						task->tss.eip = (int) asm_end_app;
 						io_sti();
+						task_run(task, -1, 0); /* 为了确实执行结束处理，如果处于休眠状态则唤醒 */
 					}
 				}
 				if (i == 256 + 0x14 && key_ctrl != 0 && shtctl->top > 2) {	/* Ctrl+T */
@@ -285,6 +286,7 @@ void HariMain(void)
 												task->tss.eax = (int) &(task->tss.esp0);
 												task->tss.eip = (int) asm_end_app;
 												io_sti();
+												task_run(task, -1, 0); /* 为了确实执行结束处理，如果处于休眠状态则唤醒 */
 											} else { /* 命令行窗口 */
 												task = sht->task;
 												io_cli();
