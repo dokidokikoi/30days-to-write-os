@@ -33,7 +33,7 @@ void init_gdtidt(void)
     // 2 * 8表示的是asm_inthandler21属于哪一个段，即段号是2，乘以8是因为低3 位有着别的意思，这里低3位必须是0。
 	set_gatedesc(idt + 0x21, (int) asm_inthandler21, 2 * 8, AR_INTGATE32);
     // 对于一部分机种而言，随着PIC的初始化，会产生一次IRQ7中断，如果不对该中断处理程序 执行STI(设置中断标志位)，操作系统的启动会失败。
-	set_gatedesc(idt + 0x27, (int) asm_inthandler27, 2 * 8, AR_INTGATE32);
+	// set_gatedesc(idt + 0x27, (int) asm_inthandler27, 2 * 8, AR_INTGATE32);
 	set_gatedesc(idt + 0x2c, (int) asm_inthandler2c, 2 * 8, AR_INTGATE32);
 	set_gatedesc(idt + 0x40, (int) asm_hrb_api,      2 * 8, AR_INTGATE32 + 0x60);
 

@@ -106,6 +106,7 @@ void set_gatedesc(struct GATE_DESCRIPTOR *gd, int offset, int selector, int ar);
 #define AR_CODE32_ER	0x409a // 系统专用，可执行的段。可读不可写。 
 #define AR_INTGATE32	0x008e // 表示这是用于中断处理的有效设定
 #define AR_TSS32		0x0089
+#define AR_LDT			0x0082
 
 /* int.c */
 void init_pic(void);
@@ -257,6 +258,7 @@ struct TASK {
 	int level, priority; /* 优先级 */
 	struct FIFO32 fifo;
 	struct TSS32 tss;
+	struct SEGMENT_DESCRIPTOR ldt[2];
 	struct CONSOLE *cons;
 	int ds_base, cons_stack;
 };
@@ -314,3 +316,7 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 int *inthandler0c(int *esp);
 int *inthandler0d(int *esp);
 void hrb_api_linewin(struct SHEET *sht, int x0, int y0, int x1, int y1, int col);
+
+/* bootpack.c */
+struct TASK *open_constask(struct SHEET *sht, unsigned int memtotal);
+struct SHEET *open_console(struct SHTCTL *shtctl, unsigned int memtotal);

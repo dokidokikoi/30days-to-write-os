@@ -52,7 +52,9 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 				cons.cur_c = COL8_FFFFFF;
 			}
 			if (i == 3) {
-				boxfill8(sheet->buf, sheet->bxsize, COL8_000000, cons.cur_x, cons.cur_y, cons.cur_x + 7, cons.cur_y + 15);
+				if (cons.sht != 0) { 
+					boxfill8(sheet->buf, sheet->bxsize, COL8_000000, cons.cur_x, cons.cur_y, cons.cur_x + 7, cons.cur_y + 15);
+				}
 				cons.cur_c = -1;
 			}
 			if (i == 4) { /* 点击命令行窗口的“×”按钮 */
@@ -73,7 +75,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 					cons_newline(&cons);
 					/*执行命令*/
 					cons_runcmd(cmdline, &cons, fat, memtotal);
-					if (sheet == 0) { // 没有窗口，执行完命令后关闭任务
+					if (cons.sht == 0) { // 没有窗口，执行完命令后关闭任务
 						cmd_exit(&cons, fat);
 					}
 					/*显示提示符*/
@@ -86,7 +88,7 @@ void console_task(struct SHEET *sheet, unsigned int memtotal)
 					}
 				}
 			} 
-			if(sheet != 0) {
+			if(cons.sht != 0) {
 				if (cons.cur_c >= 0) {
 					boxfill8(sheet->buf, sheet->bxsize, cons.cur_c, cons.cur_x, cons.cur_y, cons.cur_x + 7, cons.cur_y + 15);
 				}
@@ -336,7 +338,6 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
 {
 	struct MEMMAN *memman = (struct MEMMAN *) MEMMAN_ADDR;
 	struct FILEINFO *finfo;
-	struct SEGMENT_DESCRIPTOR *gdt = (struct SEGMENT_DESCRIPTOR *) ADR_GDT;
 	char name[18], *p, *q;
 	int i, segsiz, datsiz, esp, dathrb;
 	struct TASK *task = task_now();
@@ -376,12 +377,15 @@ int cmd_app(struct CONSOLE *cons, int *fat, char *cmdline)
 			q = (char *) memman_alloc_4k(memman, segsiz);
 			// *((int *) 0xfe8) = (int) q;
 			task->ds_base = (int) q;
-			set_segmdesc(gdt + task->sel / 8 + 1000, finfo->size - 1, (int) p, AR_CODE32_ER + 0x60);
-			set_segmdesc(gdt + task->sel / 8 + 2000, segsiz - 1,   (int) q, AR_DATA32_RW + 0x60);
+			// set_segmdesc(gdt + task->sel / 8 + 1000, finfo->size - 1, (int) p, AR_CODE32_ER + 0x60);
+			// set_segmdesc(gdt + task->sel / 8 + 2000, segsiz - 1,   (int) q, AR_DATA32_RW + 0x60);
+			set_segmdesc(task->ldt + 0, finfo->size - 1, (int) p, AR_CODE32_ER + 0x60);
+			set_segmdesc(task->ldt + 1, segsiz - 1,   (int) q, AR_DATA32_RW + 0x60);
 			for (i = 0; i < datsiz; i++) {
 				q[esp + i] = p[dathrb + i];
 			}
-			start_app(0x1b, task->sel + 1000 * 8, esp, task->sel + 2000 * 8, &(task->tss.esp0));
+			// start_app(0x1b, task->sel + 1000 * 8, esp, task->sel + 2000 * 8, &(task->tss.esp0));
+			start_app(0x1b, 0 * 8 + 4, esp, 1 * 8 + 4, &(task->tss.esp0));
 			shtctl = (struct SHTCTL *) *((int *) 0x0fe4);
 			for (i = 0; i < MAX_SHEETS; i++) {
 				sht = &(shtctl->sheets0[i]);
@@ -415,6 +419,7 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 		/* reg[0] : EDI,   reg[1] : ESI,   reg[2] : EBP,   reg[3] : ESP */
 		/* reg[4] : EBX,   reg[5] : EDX,   reg[6] : ECX,   reg[7] : EAX */
 	int i;
+	struct FIFO32 *sys_fifo = (struct FIFO32 *) *((int *) 0x0fec);
 
 	if (edx == 1) {
 		cons_putchar(cons, eax & 0xff, 1);
@@ -486,7 +491,7 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 			}
 			i = fifo32_get(&task->fifo);
 			io_sti();
-			if (i <= 1) { /* 光标用定时器 */
+			if (i <= 1 && cons->sht != 0) { /* 光标用定时器 */
 				/* 应用程序运行时不需要显示光标，因此总是将下次显示用的值置为1 */
 				timer_init(cons->timer, &task->fifo, 1); /* 下次置为1 */
 				timer_settime(cons->timer, 50);
@@ -496,6 +501,13 @@ int *hrb_api(int edi, int esi, int ebp, int esp, int ebx, int edx, int ecx, int 
 			}
 			if (i == 3) {	/* 光标OFF */
 				cons->cur_c = -1;
+			}
+			if (i == 4) {	/* 只关闭命令行窗口 */
+				timer_cancel(cons->timer);
+				io_cli();
+				fifo32_put(sys_fifo, cons->sht - shtctl->sheets0 + 2024);	/* 2024～2279 */
+				cons->sht = 0;
+				io_sti();
 			}
 			if (256 <= i) { /* 键盘数据(通过任务A) */
 				reg[7] = i - 256;
