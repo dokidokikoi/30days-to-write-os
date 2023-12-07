@@ -11,3 +11,5 @@ harib*/
 *.hrb
 *.bim
 *.lib
+!day*/haribote
+!os/haribote
