@@ -49,7 +49,7 @@ void HariMain(void)
 	int j, x, y, mmx = -1, mmy = -1, mmx2 = 0;
 	struct SHEET *sht = 0, *key_win, *sht2;
 	int *fat;
-	unsigned char *nihongo;
+	unsigned char *nihongo, *zh;
 	struct FILEINFO *finfo;
 	extern char hankaku[4096];
 
@@ -121,6 +121,24 @@ void HariMain(void)
 		}
 	}
 	*((int *) 0x0fe8) = (int) nihongo;
+	memman_free_4k(memman, (int) fat, 4 * 2880);
+
+	/* 载入zh.fnt */
+	zh = (unsigned char *) memman_alloc_4k(memman, 16 * 256 + 32 * 5170);
+	fat = (int *) memman_alloc_4k(memman, 4 * 2880);
+	file_readfat(fat, (unsigned char *) (ADR_DISKIMG + 0x000200));
+	finfo = file_search("zh.fnt", (struct FILEINFO *) (ADR_DISKIMG + 0x002600), 224);
+	if (finfo != 0) {
+		file_loadfile(finfo->clustno, finfo->size, zh, fat, (char *) (ADR_DISKIMG + 0x003e00));
+	} else {
+		for (i = 0; i < 16 * 256; i++) {
+			zh[i] = hankaku[i]; /* 没有字库，半角部分直接复制英文字库 */
+		}
+		for (i = 16 * 256; i < 16 * 256 + 32 * 94 * 47; i++) {
+			zh[i] = 0xff; /* 没有字库，全角部分以0xff填充 */
+		}
+	}
+	*((int *) 0x0fe0) = (int) zh;
 	memman_free_4k(memman, (int) fat, 4 * 2880);
 
 	for (;;) {

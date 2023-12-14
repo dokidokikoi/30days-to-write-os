@@ -19,7 +19,8 @@ haribote.img : haribote/ipl10.bin haribote/haribote.sys hello3/hello3.hrb type/t
 				winhelo3/winhelo3.hrb star1/star1.hrb stars/stars.hrb lines/lines.hrb \
 				walk/walk.hrb noodle/noodle.hrb beepdown/beepdown.hrb typeipl/typeipl.hrb \
 				color/color.hrb color2/color2.hrb sosu/sosu.hrb sosu3/sosu3.hrb Makefile \
-				iroha/iroha.hrb nihongo/nihongo.fnt moji/moji.txt chklang/chklang.hrb
+				iroha/iroha.hrb nihongo/nihongo.fnt moji/moji.txt chklang/chklang.hrb \
+				zh/zh.fnt moji/wenzi.txt
 	$(EDIMG)   imgin:../z_tools/fdimg0at.tek \
 		wbinimg src:haribote/ipl10.bin len:512 from:0 to:0 \
 		copy from:haribote/haribote.sys to:@: \
@@ -45,8 +46,10 @@ haribote.img : haribote/ipl10.bin haribote/haribote.sys hello3/hello3.hrb type/t
 		copy from:type/type.hrb to:@: \
 		copy from:iroha/iroha.hrb to:@: \
 		copy from:moji/moji.txt to:@: \
+		copy from:moji/wenzi.txt to:@: \
 		copy from:chklang/chklang.hrb to:@: \
 		copy from:nihongo/nihongo.fnt to:@: \
+		copy from:zh/zh.fnt to:@: \
 		imgout:haribote.img
 
 # コマンド
@@ -87,8 +90,8 @@ full :
 
 run_full :
 	$(MAKE) full
-	$(COPY) haribote.img $(TOOLPATH)qemu/fdimage0.bin
-	$(MAKE) -C $(TOOLPATH)qemu
+	$(COPY) haribote.img $(TOOLPATH)bochs/fdimage0.bin
+	$(MAKE) -C $(TOOLPATH)bochs
 
 install_full :
 	$(MAKE) full
